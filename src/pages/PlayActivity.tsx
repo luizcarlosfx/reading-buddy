@@ -20,12 +20,24 @@ export default function PlayActivity() {
   const [round, setRound] = useState(0);
 
   useEffect(() => {
-    if (id) {
-      const a = getActivity(id) ?? null;
-      setActivity(a);
-      if (a) setSettings(getPlaySettings(a.id, a.kind));
+    let cancelled = false;
+    async function load() {
+      if (id) {
+        try {
+          const a = (await getActivity(id)) ?? null;
+          if (cancelled) return;
+          setActivity(a);
+          if (a) setSettings(getPlaySettings(a.id, a.kind));
+        } catch {
+          if (!cancelled) setActivity(null);
+        }
+      }
+      if (!cancelled) setLoaded(true);
     }
-    setLoaded(true);
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const order = useMemo<Card[]>(() => {

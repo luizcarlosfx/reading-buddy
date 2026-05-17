@@ -1,19 +1,39 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { deleteActivity, loadActivities } from "../lib/storage";
+import { subscribeUser } from "../lib/auth";
 import { ACTIVITY_KINDS, type Activity } from "../types";
 
 export default function Home() {
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  async function refresh() {
+    setLoading(true);
+    setError(null);
+    try {
+      setActivities(await loadActivities());
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    setActivities(loadActivities());
+    refresh();
+    return subscribeUser(() => refresh());
   }, []);
 
-  function handleDelete(id: string, name: string) {
+  async function handleDelete(id: string, name: string) {
     if (!confirm(`Excluir a atividade "${name}"?`)) return;
-    deleteActivity(id);
-    setActivities(loadActivities());
+    try {
+      await deleteActivity(id);
+      await refresh();
+    } catch (e) {
+      alert(`Erro ao excluir: ${(e as Error).message}`);
+    }
   }
 
   return (
@@ -25,7 +45,13 @@ export default function Home() {
         </Link>
       </div>
 
-      {activities.length === 0 ? (
+      {loading ? (
+        <div className="card p-10 text-center text-slate-500">Carregando…</div>
+      ) : error ? (
+        <div className="card p-6 bg-rose-50 border-rose-200 text-rose-900 text-sm">
+          Erro ao carregar atividades: {error}
+        </div>
+      ) : activities.length === 0 ? (
         <div className="card p-10 text-center space-y-4">
           <div className="text-5xl">📚</div>
           <h2 className="text-xl font-bold">Nenhuma atividade ainda</h2>

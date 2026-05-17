@@ -18,18 +18,33 @@ export default function EditActivity() {
   const cardRefs = useRef<Map<string, HTMLLIElement>>(new Map());
 
   useEffect(() => {
-    if (id) {
-      const a = getActivity(id);
-      if (!a) {
-        alert("Atividade não encontrada");
-        navigate("/");
-        return;
+    let cancelled = false;
+    async function load() {
+      if (id) {
+        try {
+          const a = await getActivity(id);
+          if (cancelled) return;
+          if (!a) {
+            alert("Atividade não encontrada");
+            navigate("/");
+            return;
+          }
+          setName(a.name);
+          setKind(a.kind);
+          setCards(a.cards);
+        } catch (e) {
+          if (cancelled) return;
+          alert(`Erro ao carregar: ${(e as Error).message}`);
+          navigate("/");
+          return;
+        }
       }
-      setName(a.name);
-      setKind(a.kind);
-      setCards(a.cards);
+      if (!cancelled) setLoaded(true);
     }
-    setLoaded(true);
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [id, navigate]);
 
   const hasKey = useMemo(() => Boolean(getPixabayKey()), [pickingFor, loaded]);
@@ -71,7 +86,9 @@ export default function EditActivity() {
     });
   }
 
-  function handleSave() {
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave() {
     const trimmed = name.trim();
     if (!trimmed) {
       alert("Dê um nome para a atividade.");
@@ -88,11 +105,18 @@ export default function EditActivity() {
       name: trimmed,
       kind,
       cards: valid.map((c) => ({ ...c, word: c.word.trim() })),
-      createdAt: id ? getActivity(id)?.createdAt ?? now : now,
+      createdAt: now,
       updatedAt: now
     };
-    upsertActivity(activity);
-    navigate("/");
+    setSaving(true);
+    try {
+      await upsertActivity(activity);
+      navigate("/");
+    } catch (e) {
+      alert(`Erro ao salvar: ${(e as Error).message}`);
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!loaded) return null;
@@ -277,8 +301,8 @@ export default function EditActivity() {
       </div>
 
       <div className="flex gap-3 pt-4 sticky bottom-0 bg-slate-50 -mx-4 px-4 py-3 border-t border-slate-200">
-        <button onClick={handleSave} className="btn-primary flex-1">
-          Salvar atividade
+        <button onClick={handleSave} disabled={saving} className="btn-primary flex-1 disabled:opacity-60">
+          {saving ? "Salvando…" : "Salvar atividade"}
         </button>
         <Link to="/" className="btn-secondary">
           Cancelar

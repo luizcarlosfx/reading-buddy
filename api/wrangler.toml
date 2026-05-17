@@ -1,0 +1,11 @@
+name = "reading-buddy-api"
+main = "src/index.ts"
+compatibility_date = "2026-05-17"
+
+[vars]
+ALLOWED_ORIGINS = "https://luizcarlosfx.github.io,http://localhost:5173"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "reading-buddy"
+database_id = "738ca41b-efe6-4375-b40f-62c1864f3219"

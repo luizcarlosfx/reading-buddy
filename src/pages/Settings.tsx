@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   exportJSON,
@@ -6,6 +6,7 @@ import {
   importJSON,
   setPixabayKey
 } from "../lib/storage";
+import { clearCurrentUser, getCurrentUser, subscribeUser } from "../lib/auth";
 
 export default function Settings() {
   const envKey = (import.meta.env.VITE_PIXABAY_KEY as string | undefined) ?? "";
@@ -13,6 +14,10 @@ export default function Settings() {
   const [key, setKey] = useState(fromEnv ? "" : getPixabayKey());
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
   const [importMsg, setImportMsg] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [user, setUser] = useState<string | null>(getCurrentUser());
+
+  useEffect(() => subscribeUser(setUser), []);
 
   function handleSave() {
     setPixabayKey(key);
@@ -20,32 +25,51 @@ export default function Settings() {
     setTimeout(() => setSavedMsg(null), 2000);
   }
 
-  function handleExport() {
-    const blob = new Blob([exportJSON()], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    const stamp = new Date().toISOString().slice(0, 10);
-    a.href = url;
-    a.download = `leitura-tobias-${stamp}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+  async function handleExport() {
+    setBusy(true);
+    try {
+      const json = await exportJSON();
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const stamp = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `reading-buddy-${user ?? "export"}-${stamp}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert(`Erro ao exportar: ${(e as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
   }
 
   function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setBusy(true);
     const reader = new FileReader();
-    reader.onload = () => {
-      const result = importJSON(String(reader.result ?? ""));
+    reader.onload = async () => {
+      const result = await importJSON(String(reader.result ?? ""));
       if (result.ok) {
         setImportMsg(`Importadas ${result.count} atividades.`);
       } else {
         setImportMsg(`Erro: ${result.error}`);
       }
+      setBusy(false);
       setTimeout(() => setImportMsg(null), 4000);
+    };
+    reader.onerror = () => {
+      setImportMsg("Erro ao ler o arquivo.");
+      setBusy(false);
     };
     reader.readAsText(file);
     e.target.value = "";
+  }
+
+  function handleSwitchUser() {
+    if (!confirm("Sair e trocar de usuário?")) return;
+    clearCurrentUser();
   }
 
   return (
@@ -56,6 +80,25 @@ export default function Settings() {
         </Link>
         <h1 className="text-2xl font-extrabold">Configurações</h1>
       </div>
+
+      <section className="card p-5 space-y-3">
+        <div>
+          <h2 className="text-lg font-bold">Usuário</h2>
+          <p className="text-sm text-slate-500">
+            Cada nome tem suas próprias atividades. Pra acessar as de outra
+            pessoa, troque pro nome dela.
+          </p>
+        </div>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="text-sm">
+            Entrado como{" "}
+            <span className="font-bold text-brand-700">{user ?? "—"}</span>
+          </div>
+          <button onClick={handleSwitchUser} className="btn-secondary text-sm">
+            Trocar usuário
+          </button>
+        </div>
+      </section>
 
       <section className="card p-5 space-y-4">
         <div>
@@ -101,26 +144,27 @@ export default function Settings() {
         <div>
           <h2 className="text-lg font-bold">Backup de atividades</h2>
           <p className="text-sm text-slate-500">
-            Exporte para guardar em segurança ou levar para outro computador.
+            Exporta/importa as atividades do usuário atual ({user ?? "—"}).
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button onClick={handleExport} className="btn-secondary">
+          <button onClick={handleExport} disabled={busy} className="btn-secondary disabled:opacity-60">
             📥 Exportar JSON
           </button>
-          <label className="btn-secondary cursor-pointer">
+          <label className={`btn-secondary cursor-pointer ${busy ? "opacity-60 pointer-events-none" : ""}`}>
             📤 Importar JSON
             <input
               type="file"
               accept="application/json,.json"
               onChange={handleImport}
               className="hidden"
+              disabled={busy}
             />
           </label>
         </div>
         {importMsg && <p className="text-sm text-slate-600">{importMsg}</p>}
         <p className="text-xs text-slate-400">
-          Atenção: importar substitui as atividades atuais.
+          Importar adiciona/atualiza atividades; não apaga as existentes.
         </p>
       </section>
     </div>

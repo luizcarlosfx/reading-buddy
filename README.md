@@ -18,20 +18,34 @@ Built collaboratively with **Claude Code** (Anthropic), as a pair-programming ex
 - Images come from the [Pixabay API](https://pixabay.com/api/docs/), with automatic PT→EN translation to get better search results.
 - Backup: export/import JSON from the Settings page.
 
+## Profiles (no real auth)
+
+On first visit you type a **name** to use as a profile. The name is stored in your browser's `localStorage` and sent to the API on every request as an `X-User` header.
+
+- Each name has its own activity list. Sister can use her name and have her own cards; switching to my name shows my cards.
+- This isn't real authentication — anyone who knows a name can use it. The point is just to let multiple people share the app without conflicts. Good enough for family scope.
+- Use **Configurações → Trocar usuário** to log out and pick another name.
+
 ## Stack
 
+**Frontend** (this repo, GitHub Pages):
 - Vite + React 18 + TypeScript
 - Tailwind CSS 3
 - React Router (HashRouter, so the app works under a GitHub Pages subpath)
-- Persistence: `localStorage` (no backend, no login)
-- Hosting: GitHub Pages via GitHub Actions
+
+**API** (Cloudflare Workers + D1):
+- Live at https://reading-buddy-api.luizcarlos-sfx.workers.dev
+- Worker source lives in [`api/`](./api/)
+- D1 (managed SQLite) for activity storage, scoped per user name
 
 ## Running locally
 
 ```bash
 npm install
 cp .env.example .env.local
-# fill VITE_PIXABAY_KEY with your Pixabay API key
+# fill .env.local:
+#   VITE_PIXABAY_KEY=<your Pixabay key>
+#   VITE_API_URL=https://reading-buddy-api.luizcarlos-sfx.workers.dev
 npm run dev
 ```
 
@@ -39,6 +53,12 @@ Opens at http://localhost:5173.
 
 ## Deploy
 
-Pushing to `main` triggers `.github/workflows/deploy.yml`, which builds and publishes to GitHub Pages.
+**Frontend** — pushing to `main` triggers `.github/workflows/deploy.yml`, which builds and publishes to GitHub Pages. Required repo config:
+- Secret `VITE_PIXABAY_KEY` (Pixabay API key)
+- Variable `VITE_API_URL` (Worker URL)
 
-The Pixabay key must be set as a repo secret named `VITE_PIXABAY_KEY` (Settings → Secrets and variables → Actions).
+**API** — from `api/`:
+```bash
+npx wrangler deploy
+```
+The D1 binding and schema are configured in `api/wrangler.toml` and `api/schema.sql`.
