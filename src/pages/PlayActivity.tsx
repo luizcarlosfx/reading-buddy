@@ -11,6 +11,7 @@ import {
 } from "../types";
 import PlayWordFlip from "../components/PlayWordFlip";
 import PlayImageType from "../components/PlayImageType";
+import PlayEnglishFlip from "../components/PlayEnglishFlip";
 
 export default function PlayActivity() {
   const { id } = useParams();
@@ -86,6 +87,8 @@ export default function PlayActivity() {
 
       {settings.mode === "image-type" ? (
         <PlayImageType key={`type-${round}`} order={order} onReset={reset} />
+      ) : settings.mode === "english-flip" ? (
+        <PlayEnglishFlip key={`en-${round}`} order={order} onReset={reset} />
       ) : (
         <PlayWordFlip key={`flip-${round}`} order={order} onReset={reset} />
       )}

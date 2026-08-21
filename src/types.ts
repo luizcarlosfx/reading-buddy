@@ -1,4 +1,4 @@
-export type ActivityKind = "word-flip" | "image-type";
+export type ActivityKind = "word-flip" | "image-type" | "english-flip";
 
 export const ACTIVITY_KINDS: { value: ActivityKind; label: string; description: string }[] = [
   {
@@ -10,6 +10,11 @@ export const ACTIVITY_KINDS: { value: ActivityKind; label: string; description: 
     value: "image-type",
     label: "Digitar a palavra",
     description: "Mostra a imagem; criança digita a palavra"
+  },
+  {
+    value: "english-flip",
+    label: "Inglês",
+    description: "Mostra a imagem; toque para revelar a palavra em inglês e ouvir"
   }
 ];
 
@@ -45,7 +50,8 @@ export const PLAY_LIMIT_OPTIONS: { value: number | null; label: string }[] = [
 
 export const PLAY_MODE_PILLS: { value: ActivityKind; label: string }[] = [
   { value: "word-flip", label: "Virar" },
-  { value: "image-type", label: "Escrever" }
+  { value: "image-type", label: "Escrever" },
+  { value: "english-flip", label: "Inglês" }
 ];
 
 export interface PixabayHit {

@@ -48,6 +48,7 @@ export default function EditActivity() {
   }, [id, navigate]);
 
   const hasKey = useMemo(() => Boolean(getPixabayKey()), [pickingFor, loaded]);
+  const isEnglish = kind === "english-flip";
 
   useEffect(() => {
     if (!scrollToCardId) return;
@@ -156,7 +157,7 @@ export default function EditActivity() {
 
         <div>
           <span className="text-sm font-bold text-slate-700">Tipo de atividade</span>
-          <div className="mt-2 grid sm:grid-cols-2 gap-2">
+          <div className="mt-2 grid sm:grid-cols-3 gap-2">
             {ACTIVITY_KINDS.map((opt) => {
               const selected = kind === opt.value;
               return (
@@ -226,12 +227,14 @@ export default function EditActivity() {
 
                 <div className="flex-1 space-y-2">
                   <label className="block">
-                    <span className="text-xs font-bold text-slate-500">Palavra</span>
+                    <span className="text-xs font-bold text-slate-500">
+                      {isEnglish ? "Palavra em inglês" : "Palavra"}
+                    </span>
                     <input
                       type="text"
                       value={c.word}
                       onChange={(e) => updateCard(c.id, { word: e.target.value })}
-                      placeholder="Ex.: gato"
+                      placeholder={isEnglish ? "Ex.: cat" : "Ex.: gato"}
                       className="input mt-1"
                     />
                   </label>
