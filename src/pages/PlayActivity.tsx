@@ -4,14 +4,17 @@ import { getActivity, getPlaySettings, setPlaySettings } from "../lib/storage";
 import { shuffle } from "../lib/shuffle";
 import {
   PLAY_LIMIT_OPTIONS,
-  PLAY_MODE_PILLS,
+  PLAY_MODE_LABELS,
+  RUNTIME_MODES,
   type Activity,
+  type ActivityKind,
   type Card,
   type PlaySettings
 } from "../types";
 import PlayWordFlip from "../components/PlayWordFlip";
 import PlayImageType from "../components/PlayImageType";
 import PlayEnglishFlip from "../components/PlayEnglishFlip";
+import PlayMathFlip from "../components/PlayMathFlip";
 
 export default function PlayActivity() {
   const { id } = useParams();
@@ -83,12 +86,19 @@ export default function PlayActivity() {
         <h1 className="text-2xl font-extrabold">{activity.name}</h1>
       </div>
 
-      <Controls settings={settings} onChange={updateSettings} onReset={reset} />
+      <Controls
+        settings={settings}
+        modes={RUNTIME_MODES[activity.kind] ?? [activity.kind]}
+        onChange={updateSettings}
+        onReset={reset}
+      />
 
       {settings.mode === "image-type" ? (
         <PlayImageType key={`type-${round}`} order={order} onReset={reset} />
       ) : settings.mode === "english-flip" ? (
         <PlayEnglishFlip key={`en-${round}`} order={order} onReset={reset} />
+      ) : settings.mode === "math-flip" ? (
+        <PlayMathFlip key={`math-${round}`} order={order} onReset={reset} />
       ) : (
         <PlayWordFlip key={`flip-${round}`} order={order} onReset={reset} />
       )}
@@ -98,33 +108,41 @@ export default function PlayActivity() {
 
 function Controls({
   settings,
+  modes,
   onChange,
   onReset
 }: {
   settings: PlaySettings;
+  modes: ActivityKind[];
   onChange: (patch: Partial<PlaySettings>) => void;
   onReset: () => void;
 }) {
   return (
     <div className="card p-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-      <div className="inline-flex rounded-xl bg-slate-100 p-1">
-        {PLAY_MODE_PILLS.map((k) => {
-          const active = settings.mode === k.value;
-          return (
-            <button
-              key={k.value}
-              onClick={() => onChange({ mode: k.value })}
-              className={`px-3 py-1.5 rounded-lg text-sm font-bold transition ${
-                active
-                  ? "bg-white shadow-sm text-brand-700"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              {k.label}
-            </button>
-          );
-        })}
-      </div>
+      {modes.length > 1 ? (
+        <div className="inline-flex rounded-xl bg-slate-100 p-1">
+          {modes.map((mode) => {
+            const active = settings.mode === mode;
+            return (
+              <button
+                key={mode}
+                onClick={() => onChange({ mode })}
+                className={`px-3 py-1.5 rounded-lg text-sm font-bold transition ${
+                  active
+                    ? "bg-white shadow-sm text-brand-700"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                {PLAY_MODE_LABELS[mode]}
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <span className="inline-flex items-center px-3 py-1.5 rounded-xl bg-brand-100 text-brand-700 text-sm font-bold">
+          {PLAY_MODE_LABELS[settings.mode]}
+        </span>
+      )}
 
       <label className="inline-flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer select-none">
         <input

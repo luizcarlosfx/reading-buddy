@@ -1,4 +1,4 @@
-export type ActivityKind = "word-flip" | "image-type" | "english-flip";
+export type ActivityKind = "word-flip" | "image-type" | "english-flip" | "math-flip";
 
 export const ACTIVITY_KINDS: { value: ActivityKind; label: string; description: string }[] = [
   {
@@ -15,8 +15,30 @@ export const ACTIVITY_KINDS: { value: ActivityKind; label: string; description: 
     value: "english-flip",
     label: "Inglês",
     description: "Mostra a imagem; toque para revelar a palavra em inglês e ouvir"
+  },
+  {
+    value: "math-flip",
+    label: "Contas",
+    description: "Mostra a conta; toque para revelar o resultado e ouvir"
   }
 ];
+
+/**
+ * Modos de jogo que podem ser trocados durante a partida, por tipo de atividade.
+ * Só faz sentido trocar entre modos que usam os mesmos dados nos cards — os
+ * demais tipos são atividades diferentes e ficam travados no que foi criado.
+ */
+export const RUNTIME_MODES: Record<ActivityKind, ActivityKind[]> = {
+  "word-flip": ["word-flip", "image-type"],
+  "image-type": ["word-flip", "image-type"],
+  "english-flip": ["english-flip"],
+  "math-flip": ["math-flip"]
+};
+
+/** Tipos cujos cards precisam de imagem. */
+export function needsImage(kind: ActivityKind): boolean {
+  return kind !== "math-flip";
+}
 
 export interface Card {
   id: string;
@@ -48,11 +70,12 @@ export const PLAY_LIMIT_OPTIONS: { value: number | null; label: string }[] = [
   { value: 6, label: "6" }
 ];
 
-export const PLAY_MODE_PILLS: { value: ActivityKind; label: string }[] = [
-  { value: "word-flip", label: "Virar" },
-  { value: "image-type", label: "Escrever" },
-  { value: "english-flip", label: "Inglês" }
-];
+export const PLAY_MODE_LABELS: Record<ActivityKind, string> = {
+  "word-flip": "Virar",
+  "image-type": "Escrever",
+  "english-flip": "Inglês",
+  "math-flip": "Contas"
+};
 
 export interface PixabayHit {
   id: number;

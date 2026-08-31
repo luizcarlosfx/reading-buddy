@@ -1,5 +1,5 @@
 import { api } from "./api";
-import type { Activity, ActivityKind, PlaySettings } from "../types";
+import { RUNTIME_MODES, type Activity, type ActivityKind, type PlaySettings } from "../types";
 
 const PIXABAY_KEY_KEY = "leitura-tobias:pixabay-key";
 const PLAY_SETTINGS_KEY = "leitura-tobias:play-settings";
@@ -54,7 +54,13 @@ export function setPixabayKey(key: string): void {
   localStorage.setItem(PIXABAY_KEY_KEY, key.trim());
 }
 
-export function getPlaySettings(activityId: string, defaultMode: ActivityKind): PlaySettings {
+/**
+ * Preferências de jogo salvas para a atividade. O modo é sempre limitado aos
+ * modos compatíveis com o tipo da atividade — um modo antigo/incompatível
+ * salvo no localStorage cai de volta para o tipo em que a atividade foi criada.
+ */
+export function getPlaySettings(activityId: string, kind: ActivityKind): PlaySettings {
+  const allowed = RUNTIME_MODES[kind] ?? [kind];
   try {
     const raw = localStorage.getItem(PLAY_SETTINGS_KEY);
     if (raw) {
@@ -62,14 +68,14 @@ export function getPlaySettings(activityId: string, defaultMode: ActivityKind): 
       const s = all[activityId];
       if (s) {
         return {
-          mode: s.mode ?? defaultMode,
+          mode: s.mode && allowed.includes(s.mode) ? s.mode : kind,
           shuffled: s.shuffled ?? true,
           limit: s.limit ?? null
         };
       }
     }
   } catch {}
-  return { mode: defaultMode, shuffled: true, limit: null };
+  return { mode: kind, shuffled: true, limit: null };
 }
 
 export function setPlaySettings(activityId: string, settings: PlaySettings): void {

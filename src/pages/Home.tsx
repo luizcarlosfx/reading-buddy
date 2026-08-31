@@ -104,7 +104,7 @@ export default function Home() {
 }
 
 function ThumbStrip({ cards }: { cards: Activity["cards"] }) {
-  const preview = cards.slice(0, 3);
+  const preview = cards.filter((c) => c.imageThumb || c.imageUrl).slice(0, 3);
   if (preview.length === 0) return null;
   return (
     <div className="flex -space-x-2">
@@ -113,13 +113,11 @@ function ThumbStrip({ cards }: { cards: Activity["cards"] }) {
           key={c.id}
           className="w-10 h-10 rounded-lg border-2 border-white bg-slate-100 overflow-hidden"
         >
-          {c.imageThumb || c.imageUrl ? (
-            <img
-              src={c.imageThumb || c.imageUrl}
-              alt=""
-              className="w-full h-full object-cover"
-            />
-          ) : null}
+          <img
+            src={c.imageThumb || c.imageUrl}
+            alt=""
+            className="w-full h-full object-cover"
+          />
         </div>
       ))}
     </div>
