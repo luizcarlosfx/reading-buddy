@@ -1,8 +1,15 @@
 import { api } from "./api";
-import { RUNTIME_MODES, type Activity, type ActivityKind, type PlaySettings } from "../types";
+import {
+  RUNTIME_MODES,
+  type Activity,
+  type ActivityKind,
+  type LetterCase,
+  type PlaySettings
+} from "../types";
 
 const PIXABAY_KEY_KEY = "leitura-tobias:pixabay-key";
 const PLAY_SETTINGS_KEY = "leitura-tobias:play-settings";
+const LETTER_CASE_KEY = "leitura-tobias:letter-case";
 
 export function uid(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -84,6 +91,19 @@ export function setPlaySettings(activityId: string, settings: PlaySettings): voi
     const all = raw ? (JSON.parse(raw) as Record<string, PlaySettings>) : {};
     all[activityId] = settings;
     localStorage.setItem(PLAY_SETTINGS_KEY, JSON.stringify(all));
+  } catch {}
+}
+
+/** A caixa das letras é global: vale para todas as atividades de leitura/escrita. */
+export function getLetterCase(): LetterCase {
+  const raw = localStorage.getItem(LETTER_CASE_KEY);
+  if (raw === "upper" || raw === "lower" || raw === "original") return raw;
+  return "original";
+}
+
+export function setLetterCase(letterCase: LetterCase): void {
+  try {
+    localStorage.setItem(LETTER_CASE_KEY, letterCase);
   } catch {}
 }
 

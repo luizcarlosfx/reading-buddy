@@ -1,14 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getActivity, getPlaySettings, setPlaySettings } from "../lib/storage";
+import {
+  getActivity,
+  getLetterCase,
+  getPlaySettings,
+  setLetterCase,
+  setPlaySettings
+} from "../lib/storage";
 import { shuffle } from "../lib/shuffle";
 import {
+  LETTER_CASE_OPTIONS,
   PLAY_LIMIT_OPTIONS,
   PLAY_MODE_LABELS,
   RUNTIME_MODES,
+  supportsLetterCase,
   type Activity,
   type ActivityKind,
   type Card,
+  type LetterCase,
   type PlaySettings
 } from "../types";
 import PlayWordFlip from "../components/PlayWordFlip";
@@ -22,6 +31,7 @@ export default function PlayActivity() {
   const [settings, setSettings] = useState<PlaySettings | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [round, setRound] = useState(0);
+  const [letterCase, setLetterCaseState] = useState<LetterCase>(() => getLetterCase());
 
   useEffect(() => {
     let cancelled = false;
@@ -73,6 +83,11 @@ export default function PlayActivity() {
     setRound((r) => r + 1);
   }
 
+  function changeLetterCase(next: LetterCase) {
+    setLetterCaseState(next);
+    setLetterCase(next);
+  }
+
   function reset() {
     setRound((r) => r + 1);
   }
@@ -89,18 +104,30 @@ export default function PlayActivity() {
       <Controls
         settings={settings}
         modes={RUNTIME_MODES[activity.kind] ?? [activity.kind]}
+        letterCase={letterCase}
+        onLetterCaseChange={changeLetterCase}
         onChange={updateSettings}
         onReset={reset}
       />
 
       {settings.mode === "image-type" ? (
-        <PlayImageType key={`type-${round}`} order={order} onReset={reset} />
+        <PlayImageType
+          key={`type-${round}`}
+          order={order}
+          letterCase={letterCase}
+          onReset={reset}
+        />
       ) : settings.mode === "english-flip" ? (
         <PlayEnglishFlip key={`en-${round}`} order={order} onReset={reset} />
       ) : settings.mode === "math-flip" ? (
         <PlayMathFlip key={`math-${round}`} order={order} onReset={reset} />
       ) : (
-        <PlayWordFlip key={`flip-${round}`} order={order} onReset={reset} />
+        <PlayWordFlip
+          key={`flip-${round}`}
+          order={order}
+          letterCase={letterCase}
+          onReset={reset}
+        />
       )}
     </div>
   );
@@ -109,11 +136,15 @@ export default function PlayActivity() {
 function Controls({
   settings,
   modes,
+  letterCase,
+  onLetterCaseChange,
   onChange,
   onReset
 }: {
   settings: PlaySettings;
   modes: ActivityKind[];
+  letterCase: LetterCase;
+  onLetterCaseChange: (next: LetterCase) => void;
   onChange: (patch: Partial<PlaySettings>) => void;
   onReset: () => void;
 }) {
@@ -142,6 +173,31 @@ function Controls({
         <span className="inline-flex items-center px-3 py-1.5 rounded-xl bg-brand-100 text-brand-700 text-sm font-bold">
           {PLAY_MODE_LABELS[settings.mode]}
         </span>
+      )}
+
+      {supportsLetterCase(settings.mode) && (
+        <div
+          className="inline-flex rounded-xl bg-slate-100 p-1"
+          role="group"
+          aria-label="Caixa das letras"
+        >
+          {LETTER_CASE_OPTIONS.map((opt) => {
+            const active = letterCase === opt.value;
+            return (
+              <button
+                key={opt.value}
+                onClick={() => onLetterCaseChange(opt.value)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-bold transition ${
+                  active
+                    ? "bg-white shadow-sm text-brand-700"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
       )}
 
       <label className="inline-flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer select-none">

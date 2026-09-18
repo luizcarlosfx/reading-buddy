@@ -40,6 +40,20 @@ export function needsImage(kind: ActivityKind): boolean {
   return kind !== "math-flip";
 }
 
+/** Caixa das letras mostrada nas atividades de leitura/escrita. */
+export type LetterCase = "original" | "upper" | "lower";
+
+export const LETTER_CASE_OPTIONS: { value: LetterCase; label: string }[] = [
+  { value: "original", label: "Aa" },
+  { value: "upper", label: "AA" },
+  { value: "lower", label: "aa" }
+];
+
+/** Tipos de atividade em que a caixa das letras pode ser trocada. */
+export function supportsLetterCase(kind: ActivityKind): boolean {
+  return kind === "word-flip" || kind === "image-type";
+}
+
 export interface Card {
   id: string;
   word: string;

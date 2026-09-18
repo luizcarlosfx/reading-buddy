@@ -1,12 +1,15 @@
 import { useState } from "react";
-import type { Card } from "../types";
+import { applyCase } from "../lib/letterCase";
+import type { Card, LetterCase } from "../types";
 import FitText from "./FitText";
 
 export default function PlayWordFlip({
   order,
+  letterCase,
   onReset
 }: {
   order: Card[];
+  letterCase: LetterCase;
   onReset: () => void;
 }) {
   const [flipped, setFlipped] = useState<Set<string>>(new Set());
@@ -32,6 +35,7 @@ export default function PlayWordFlip({
           <li key={c.id}>
             <FlipCard
               card={c}
+              letterCase={letterCase}
               isFlipped={flipped.has(c.id)}
               onClick={() => toggleFlip(c.id)}
             />
@@ -54,10 +58,12 @@ export default function PlayWordFlip({
 
 function FlipCard({
   card,
+  letterCase,
   isFlipped,
   onClick
 }: {
   card: Card;
+  letterCase: LetterCase;
   isFlipped: boolean;
   onClick: () => void;
 }) {
@@ -71,7 +77,9 @@ function FlipCard({
     >
       <div className="flip-card-inner">
         <div className="flip-card-face flip-card-front rounded-3xl bg-white border-2 border-slate-200 shadow-sm p-6">
-          <FitText className="font-black text-slate-800">{card.word}</FitText>
+          <FitText className="font-black text-slate-800">
+            {applyCase(card.word, letterCase)}
+          </FitText>
         </div>
         <div className="flip-card-face flip-card-back rounded-3xl overflow-hidden bg-slate-100 shadow-sm">
           <img

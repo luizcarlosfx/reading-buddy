@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { applyCase } from "../lib/letterCase";
 import { normalizeAnswer } from "../lib/normalize";
-import type { Card } from "../types";
+import type { Card, LetterCase } from "../types";
 
 export default function PlayImageType({
   order,
+  letterCase,
   onReset
 }: {
   order: Card[];
+  letterCase: LetterCase;
   onReset: () => void;
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -43,7 +46,7 @@ export default function PlayImageType({
   }, [correctIds, order, revealed]);
 
   function reveal(card: Card) {
-    setAnswers((prev) => ({ ...prev, [card.id]: card.word }));
+    setAnswers((prev) => ({ ...prev, [card.id]: applyCase(card.word, letterCase) }));
     setRevealed((prev) => new Set(prev).add(card.id));
   }
 
@@ -59,6 +62,7 @@ export default function PlayImageType({
             <TypeRow
               card={c}
               index={idx}
+              letterCase={letterCase}
               answer={answers[c.id] ?? ""}
               isCorrect={correctIds.has(c.id)}
               isRevealed={revealed.has(c.id)}
@@ -90,6 +94,7 @@ export default function PlayImageType({
 function TypeRow({
   card,
   index,
+  letterCase,
   answer,
   isCorrect,
   isRevealed,
@@ -99,6 +104,7 @@ function TypeRow({
 }: {
   card: Card;
   index: number;
+  letterCase: LetterCase;
   answer: string;
   isCorrect: boolean;
   isRevealed: boolean;
@@ -108,6 +114,13 @@ function TypeRow({
 }) {
   const hasInput = answer.trim().length > 0;
   const wrongAttempt = hasInput && !isCorrect && !isRevealed;
+
+  const caseClass =
+    letterCase === "upper"
+      ? "uppercase placeholder:normal-case"
+      : letterCase === "lower"
+      ? "lowercase placeholder:normal-case"
+      : "";
 
   let borderClass = "border-slate-200";
   if (isCorrect) borderClass = "border-emerald-500";
@@ -140,7 +153,7 @@ function TypeRow({
             autoCorrect="off"
             spellCheck={false}
             disabled={isCorrect || isRevealed}
-            className={`input pr-12 text-2xl font-bold ${
+            className={`input pr-12 text-2xl font-bold ${caseClass} ${
               isCorrect
                 ? "bg-emerald-50 text-emerald-900 border-emerald-500"
                 : isRevealed
