@@ -54,6 +54,16 @@ export function supportsLetterCase(kind: ActivityKind): boolean {
   return kind === "word-flip" || kind === "image-type";
 }
 
+/** Segundos por card, ou null pra jogar sem tempo. Vale pra todos os tipos de atividade. */
+export const TIME_LIMIT_OPTIONS: { value: number | null; label: string }[] = [
+  { value: null, label: "Sem tempo" },
+  { value: 30, label: "30s" },
+  { value: 20, label: "20s" },
+  { value: 15, label: "15s" },
+  { value: 10, label: "10s" },
+  { value: 5, label: "5s" }
+];
+
 export interface Card {
   id: string;
   word: string;

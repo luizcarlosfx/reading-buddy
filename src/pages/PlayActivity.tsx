@@ -4,8 +4,10 @@ import {
   getActivity,
   getLetterCase,
   getPlaySettings,
+  getTimeLimit,
   setLetterCase,
-  setPlaySettings
+  setPlaySettings,
+  setTimeLimit
 } from "../lib/storage";
 import { shuffle } from "../lib/shuffle";
 import {
@@ -14,6 +16,7 @@ import {
   PLAY_MODE_LABELS,
   RUNTIME_MODES,
   supportsLetterCase,
+  TIME_LIMIT_OPTIONS,
   type Activity,
   type ActivityKind,
   type Card,
@@ -32,6 +35,7 @@ export default function PlayActivity() {
   const [loaded, setLoaded] = useState(false);
   const [round, setRound] = useState(0);
   const [letterCase, setLetterCaseState] = useState<LetterCase>(() => getLetterCase());
+  const [timeLimit, setTimeLimitState] = useState<number | null>(() => getTimeLimit());
 
   useEffect(() => {
     let cancelled = false;
@@ -88,6 +92,13 @@ export default function PlayActivity() {
     setLetterCase(next);
   }
 
+  function changeTimeLimit(next: number | null) {
+    setTimeLimitState(next);
+    setTimeLimit(next);
+    // A vez dos cards é remontada do zero quando o tempo muda.
+    setRound((r) => r + 1);
+  }
+
   function reset() {
     setRound((r) => r + 1);
   }
@@ -106,6 +117,8 @@ export default function PlayActivity() {
         modes={RUNTIME_MODES[activity.kind] ?? [activity.kind]}
         letterCase={letterCase}
         onLetterCaseChange={changeLetterCase}
+        timeLimit={timeLimit}
+        onTimeLimitChange={changeTimeLimit}
         onChange={updateSettings}
         onReset={reset}
       />
@@ -115,17 +128,29 @@ export default function PlayActivity() {
           key={`type-${round}`}
           order={order}
           letterCase={letterCase}
+          timeLimit={timeLimit}
           onReset={reset}
         />
       ) : settings.mode === "english-flip" ? (
-        <PlayEnglishFlip key={`en-${round}`} order={order} onReset={reset} />
+        <PlayEnglishFlip
+          key={`en-${round}`}
+          order={order}
+          timeLimit={timeLimit}
+          onReset={reset}
+        />
       ) : settings.mode === "math-flip" ? (
-        <PlayMathFlip key={`math-${round}`} order={order} onReset={reset} />
+        <PlayMathFlip
+          key={`math-${round}`}
+          order={order}
+          timeLimit={timeLimit}
+          onReset={reset}
+        />
       ) : (
         <PlayWordFlip
           key={`flip-${round}`}
           order={order}
           letterCase={letterCase}
+          timeLimit={timeLimit}
           onReset={reset}
         />
       )}
@@ -138,6 +163,8 @@ function Controls({
   modes,
   letterCase,
   onLetterCaseChange,
+  timeLimit,
+  onTimeLimitChange,
   onChange,
   onReset
 }: {
@@ -145,6 +172,8 @@ function Controls({
   modes: ActivityKind[];
   letterCase: LetterCase;
   onLetterCaseChange: (next: LetterCase) => void;
+  timeLimit: number | null;
+  onTimeLimitChange: (next: number | null) => void;
   onChange: (patch: Partial<PlaySettings>) => void;
   onReset: () => void;
 }) {
@@ -208,6 +237,23 @@ function Controls({
           className="w-4 h-4 accent-brand-500"
         />
         Embaralhar
+      </label>
+
+      <label className="inline-flex items-center gap-2 text-sm font-bold text-slate-700">
+        Tempo
+        <select
+          value={timeLimit ?? "off"}
+          onChange={(e) =>
+            onTimeLimitChange(e.target.value === "off" ? null : Number(e.target.value))
+          }
+          className="rounded-lg border-2 border-slate-200 px-2 py-1 text-sm bg-white font-bold"
+        >
+          {TIME_LIMIT_OPTIONS.map((opt) => (
+            <option key={opt.value ?? "off"} value={opt.value ?? "off"}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
       </label>
 
       <label className="inline-flex items-center gap-2 text-sm font-bold text-slate-700">

@@ -10,6 +10,7 @@ import {
 const PIXABAY_KEY_KEY = "leitura-tobias:pixabay-key";
 const PLAY_SETTINGS_KEY = "leitura-tobias:play-settings";
 const LETTER_CASE_KEY = "leitura-tobias:letter-case";
+const TIME_LIMIT_KEY = "leitura-tobias:time-limit";
 
 export function uid(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -104,6 +105,21 @@ export function getLetterCase(): LetterCase {
 export function setLetterCase(letterCase: LetterCase): void {
   try {
     localStorage.setItem(LETTER_CASE_KEY, letterCase);
+  } catch {}
+}
+
+/** O limite de tempo por card também é global e vale pra qualquer atividade. */
+export function getTimeLimit(): number | null {
+  const raw = localStorage.getItem(TIME_LIMIT_KEY);
+  if (!raw) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+export function setTimeLimit(seconds: number | null): void {
+  try {
+    if (seconds === null) localStorage.removeItem(TIME_LIMIT_KEY);
+    else localStorage.setItem(TIME_LIMIT_KEY, String(seconds));
   } catch {}
 }
 
