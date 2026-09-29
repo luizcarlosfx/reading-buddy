@@ -9,6 +9,7 @@ import {
   type Card
 } from "../types";
 import { formatResult, parseMath } from "../lib/math";
+import { ALPHABET } from "../lib/letters";
 import ImagePickerModal from "../components/ImagePickerModal";
 
 export default function EditActivity() {
@@ -57,6 +58,7 @@ export default function EditActivity() {
   const hasKey = useMemo(() => Boolean(getPixabayKey()), [pickingFor, loaded]);
   const isEnglish = kind === "english-flip";
   const isMath = kind === "math-flip";
+  const isLetters = kind === "letters";
   const withImage = needsImage(kind);
   const kindLabel = ACTIVITY_KINDS.find((k) => k.value === kind)?.label ?? kind;
 
@@ -75,6 +77,15 @@ export default function EditActivity() {
     const newId = uid();
     setCards((c) => [...c, { id: newId, word: "", imageUrl: "" }]);
     setScrollToCardId(newId);
+  }
+
+  function fillAlphabet() {
+    setCards((c) => [...c, ...ALPHABET.map((letter) => ({ id: uid(), word: letter, imageUrl: "" }))]);
+  }
+
+  function chooseKind(next: ActivityKind) {
+    setKind(next);
+    if (next === "letters" && cards.length === 0) fillAlphabet();
   }
 
   function removeCard(cardId: string) {
@@ -122,6 +133,10 @@ export default function EditActivity() {
         word: parseMath(c.word)!.display,
         imageUrl: ""
       }));
+    } else if (isLetters) {
+      valid = cards
+        .filter((c) => c.word.trim())
+        .map((c) => ({ id: c.id, word: c.word.trim(), imageUrl: "" }));
     } else {
       valid = cards
         .filter((c) => c.word.trim() && c.imageUrl)
@@ -132,6 +147,8 @@ export default function EditActivity() {
       alert(
         isMath
           ? "Adicione ao menos uma conta."
+          : isLetters
+          ? "Adicione ao menos uma letra."
           : "Adicione ao menos um card com palavra e imagem."
       );
       return;
@@ -187,7 +204,9 @@ export default function EditActivity() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder={isMath ? "Ex.: Tabuada da soma" : "Ex.: Animais da fazenda"}
+            placeholder={
+              isMath ? "Ex.: Tabuada da soma" : isLetters ? "Ex.: Alfabeto" : "Ex.: Animais da fazenda"
+            }
             className="input mt-1"
           />
         </label>
@@ -195,14 +214,14 @@ export default function EditActivity() {
         <div>
           <span className="text-sm font-bold text-slate-700">Tipo de atividade</span>
           {isNew ? (
-            <div className="mt-2 grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            <div className="mt-2 grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {ACTIVITY_KINDS.map((opt) => {
                 const selected = kind === opt.value;
                 return (
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => setKind(opt.value)}
+                    onClick={() => chooseKind(opt.value)}
                     className={`text-left p-3 rounded-xl border-2 transition ${
                       selected
                         ? "border-brand-500 bg-brand-50"
@@ -231,17 +250,26 @@ export default function EditActivity() {
       <div className="space-y-3">
         <div className="sticky top-[72px] z-10 -mx-4 px-4 py-3 bg-slate-50/95 backdrop-blur border-b border-slate-200 flex items-center justify-between gap-3">
           <h2 className="text-lg font-bold">
-            {isMath ? "Contas" : "Cards"} ({cards.length})
+            {isMath ? "Contas" : isLetters ? "Letras" : "Cards"} ({cards.length})
           </h2>
-          <button onClick={addCard} className="btn-primary">
-            + {isMath ? "Adicionar conta" : "Adicionar card"}
-          </button>
+          <div className="flex gap-2">
+            {isLetters && (
+              <button onClick={fillAlphabet} className="btn-secondary">
+                A–Z
+              </button>
+            )}
+            <button onClick={addCard} className="btn-primary">
+              + {isMath ? "Adicionar conta" : isLetters ? "Adicionar letra" : "Adicionar card"}
+            </button>
+          </div>
         </div>
 
         {cards.length === 0 ? (
           <div className="card p-8 text-center text-slate-500">
             {isMath
               ? "Nenhuma conta. Clique em “Adicionar conta” para começar."
+              : isLetters
+              ? "Nenhuma letra. Clique em “A–Z” para colocar o alfabeto inteiro."
               : "Nenhum card. Clique em “Adicionar card” para começar."}
           </div>
         ) : (
@@ -279,6 +307,12 @@ export default function EditActivity() {
 
                 {isMath ? (
                   <MathCardFields
+                    card={c}
+                    onChange={(word) => updateCard(c.id, { word })}
+                    onRemove={() => removeCard(c.id)}
+                  />
+                ) : isLetters ? (
+                  <LetterCardFields
                     card={c}
                     onChange={(word) => updateCard(c.id, { word })}
                     onRemove={() => removeCard(c.id)}
@@ -434,6 +468,37 @@ function MathCardFields({
             <span className="text-slate-400 text-xs text-center">—</span>
           )}
         </div>
+        <button onClick={onRemove} className="btn-ghost text-sm text-rose-600">
+          Remover
+        </button>
+      </div>
+    </>
+  );
+}
+
+function LetterCardFields({
+  card,
+  onChange,
+  onRemove
+}: {
+  card: Card;
+  onChange: (word: string) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <>
+      <label className="block flex-1">
+        <span className="text-xs font-bold text-slate-500">Letra</span>
+        <input
+          type="text"
+          value={card.word}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Ex.: A"
+          maxLength={3}
+          className="input mt-1 font-bold"
+        />
+      </label>
+      <div className="flex-shrink-0 flex items-center">
         <button onClick={onRemove} className="btn-ghost text-sm text-rose-600">
           Remover
         </button>

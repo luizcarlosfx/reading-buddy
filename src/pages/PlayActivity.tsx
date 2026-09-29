@@ -27,6 +27,7 @@ import PlayWordFlip from "../components/PlayWordFlip";
 import PlayImageType from "../components/PlayImageType";
 import PlayEnglishFlip from "../components/PlayEnglishFlip";
 import PlayMathFlip from "../components/PlayMathFlip";
+import PlayLetters from "../components/PlayLetters";
 
 export default function PlayActivity() {
   const { id } = useParams();
@@ -142,6 +143,14 @@ export default function PlayActivity() {
         <PlayMathFlip
           key={`math-${round}`}
           order={order}
+          timeLimit={timeLimit}
+          onReset={reset}
+        />
+      ) : settings.mode === "letters" ? (
+        <PlayLetters
+          key={`letters-${round}`}
+          order={order}
+          letterCase={letterCase}
           timeLimit={timeLimit}
           onReset={reset}
         />

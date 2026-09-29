@@ -1,4 +1,4 @@
-export type ActivityKind = "word-flip" | "image-type" | "english-flip" | "math-flip";
+export type ActivityKind = "word-flip" | "image-type" | "english-flip" | "math-flip" | "letters";
 
 export const ACTIVITY_KINDS: { value: ActivityKind; label: string; description: string }[] = [
   {
@@ -20,6 +20,11 @@ export const ACTIVITY_KINDS: { value: ActivityKind; label: string; description: 
     value: "math-flip",
     label: "Contas",
     description: "Mostra a conta; toque para revelar o resultado e ouvir"
+  },
+  {
+    value: "letters",
+    label: "Letras",
+    description: "Mostra as letras; toque para ouvir o nome da letra"
   }
 ];
 
@@ -32,12 +37,13 @@ export const RUNTIME_MODES: Record<ActivityKind, ActivityKind[]> = {
   "word-flip": ["word-flip", "image-type"],
   "image-type": ["word-flip", "image-type"],
   "english-flip": ["english-flip"],
-  "math-flip": ["math-flip"]
+  "math-flip": ["math-flip"],
+  letters: ["letters"]
 };
 
 /** Tipos cujos cards precisam de imagem. */
 export function needsImage(kind: ActivityKind): boolean {
-  return kind !== "math-flip";
+  return kind !== "math-flip" && kind !== "letters";
 }
 
 /** Caixa das letras mostrada nas atividades de leitura/escrita. */
@@ -51,7 +57,7 @@ export const LETTER_CASE_OPTIONS: { value: LetterCase; label: string }[] = [
 
 /** Tipos de atividade em que a caixa das letras pode ser trocada. */
 export function supportsLetterCase(kind: ActivityKind): boolean {
-  return kind === "word-flip" || kind === "image-type";
+  return kind === "word-flip" || kind === "image-type" || kind === "letters";
 }
 
 /** Segundos por card, ou null pra jogar sem tempo. Vale pra todos os tipos de atividade. */
@@ -98,7 +104,8 @@ export const PLAY_MODE_LABELS: Record<ActivityKind, string> = {
   "word-flip": "Virar",
   "image-type": "Escrever",
   "english-flip": "Inglês",
-  "math-flip": "Contas"
+  "math-flip": "Contas",
+  letters: "Letras"
 };
 
 export interface PixabayHit {
